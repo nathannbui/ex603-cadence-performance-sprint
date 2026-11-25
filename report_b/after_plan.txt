@@ -1,0 +1,29 @@
+Limit  (cost=41415.98..41416.03 rows=20 width=50) (actual time=283.747..283.755 rows=20 loops=1)
+  Buffers: shared hit=801 read=21960 written=1, temp read=170 written=332
+  ->  Sort  (cost=41415.98..41541.01 rows=50012 width=50) (actual time=283.745..283.747 rows=20 loops=1)
+        Sort Key: (round(((sum(p.play_duration_seconds))::numeric / 60.0), 1)) DESC NULLS LAST, a.account_id
+        Sort Method: top-N heapsort  Memory: 27kB
+        Buffers: shared hit=801 read=21960 written=1, temp read=170 written=332
+        ->  HashAggregate  (cost=37716.68..40085.18 rows=50012 width=50) (actual time=268.529..279.748 rows=41901 loops=1)
+              Group Key: a.account_id
+              Batches: 5  Memory Usage: 4401kB  Disk Usage: 1680kB
+              Buffers: shared hit=795 read=21960 written=1, temp read=170 written=332
+              ->  Hash Join  (cost=4338.84..28557.79 rows=127428 width=22) (actual time=31.988..235.275 rows=123050 loops=1)
+                    Hash Cond: (p.user_id = a.account_id)
+                    Buffers: shared hit=795 read=21960 written=1
+                    ->  Bitmap Heap Scan on plays p  (cost=2706.57..26590.99 rows=127428 width=8) (actual time=13.656..180.151 rows=123050 loops=1)
+                          Recheck Cond: ((played_at >= '2025-12-01 00:00:00'::timestamp without time zone) AND (played_at < '2026-01-01 00:00:00'::timestamp without time zone))
+                          Heap Blocks: exact=21909
+                          Buffers: shared hit=288 read=21960 written=1
+                          ->  Bitmap Index Scan on idx_plays_played_at  (cost=0.00..2674.71 rows=127428 width=0) (actual time=10.489..10.489 rows=123050 loops=1)
+                                Index Cond: ((played_at >= '2025-12-01 00:00:00'::timestamp without time zone) AND (played_at < '2026-01-01 00:00:00'::timestamp without time zone))
+                                Buffers: shared hit=22 read=317
+                    ->  Hash  (cost=1007.12..1007.12 rows=50012 width=18) (actual time=18.155..18.155 rows=50012 loops=1)
+                          Buckets: 65536  Batches: 1  Memory Usage: 2994kB
+                          Buffers: shared hit=507
+                          ->  Seq Scan on accounts a  (cost=0.00..1007.12 rows=50012 width=18) (actual time=0.045..7.391 rows=50012 loops=1)
+                                Buffers: shared hit=507
+Planning:
+  Buffers: shared hit=213 read=8
+Planning Time: 4.847 ms
+Execution Time: 284.920 ms
